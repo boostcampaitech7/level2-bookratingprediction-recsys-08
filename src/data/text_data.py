@@ -54,7 +54,7 @@ def text_to_vector(text, tokenizer, model):
     return sentence_embedding.cpu().detach().numpy()
 
 
-def process_text_data(ratings, users, books, tokenizer, model, vector_create=False):
+def process_text_data(args, ratings, users, books, tokenizer, model, vector_create=False):
     """
     Parameters
     ----------
@@ -92,8 +92,8 @@ def process_text_data(ratings, users, books, tokenizer, model, vector_create=Fal
     )
 
     if vector_create:
-        if not os.path.exists("./data/text_vector"):
-            os.makedirs("./data/text_vector")
+        if not os.path.exists(args.dataset.data_path + "text_vector"):
+            os.makedirs(args.dataset.data_path + "text_vector")
 
         print("Create Item Summary Vector")
         book_summary_vector_list = []
@@ -117,7 +117,7 @@ def process_text_data(ratings, users, books, tokenizer, model, vector_create=Fal
             axis=1,
         )
 
-        np.save("./data/text_vector/book_summary_vector.npy", book_summary_vector_list)
+        np.save(args.dataset.data_path + "text_vector/book_summary_vector.npy", book_summary_vector_list)
 
         print("Create User Summary Merge Vector")
         user_summary_merge_vector_list = []
@@ -162,7 +162,7 @@ def process_text_data(ratings, users, books, tokenizer, model, vector_create=Fal
         )
 
         np.save(
-            "./data/text_vector/user_summary_merge_vector.npy",
+            args.dataset.data_path + "text_vector/user_summary_merge_vector.npy",
             user_summary_merge_vector_list,
         )
 
@@ -170,10 +170,10 @@ def process_text_data(ratings, users, books, tokenizer, model, vector_create=Fal
         print("Check Vectorizer")
         print("Vector Load")
         book_summary_vector_list = np.load(
-            "./data/text_vector/book_summary_vector.npy", allow_pickle=True
+            args.dataset.data_path + "text_vector/book_summary_vector.npy", allow_pickle=True
         )
         user_summary_merge_vector_list = np.load(
-            "./data/text_vector/user_summary_merge_vector.npy", allow_pickle=True
+            args.dataset.data_path + "text_vector/user_summary_merge_vector.npy", allow_pickle=True
         )
 
     book_summary_vector_df = pd.DataFrame({"isbn": book_summary_vector_list[:, 0]})
@@ -278,7 +278,7 @@ def text_data_load(args):
     )
     model.eval()
     users_, books_ = process_text_data(
-        train, users, books, tokenizer, model, args.model_args[args.model].vector_create
+        args, train, users, books, tokenizer, model, args.model_args[args.model].vector_create
     )
 
     # 유저 및 책 정보를 합쳐서 데이터 프레임 생성 (단, 베이스라인에서는 user_id, isbn, user_summary_merge_vector, book_summary_vector만 사용함)
