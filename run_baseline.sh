@@ -1,6 +1,7 @@
 ######## 기본 베이스라인 실행 스크립트 ########
 # 예) $ bash run_baseline.sh
 # -c : --config / -m : --model / -w : --wandb / -r : --run_name
+python main.py  -c config/config_multimodal.yaml -m MultiModalModel -r MultiModal_BERT+VIT
 python main.py  -c config/config_baseline.yaml  -m FM  -w True  -r FM_baseline
 python main.py  -c config/config_baseline.yaml  -m FFM  -w True  -r FFM_baseline
 python main.py  -c config/config_baseline.yaml  -m DeepFM  -w True  -r DeepFM_baseline

@@ -6,3 +6,6 @@ from .WDN import WideAndDeep as WDN
 from .DCN import DeepCrossNetwork as DCN
 from .FM_Image import Image_FM, Image_DeepFM, ResNet_DeepFM
 from .FM_Text import Text_FM, Text_DeepFM
+from .VisionTransformer import VisionTransformer
+from .TextBERT import TextBERT
+from .MultiModalModel import MultiModalModel  # 추가
