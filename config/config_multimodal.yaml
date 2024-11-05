@@ -1,0 +1,64 @@
+# config.yaml
+# 직접 하이퍼파라미터를 추가하여 관리할 수 있습니다.
+
+memo: |-
+    멀티모달 모델을 사용한 실험.
+    Vision Transformer와 BERT를 결합한 멀티모달 모델.
+
+
+# 아래의 항목들은 argparser로 받은 인자를 우선적으로 사용합니다.
+predict: False
+checkpoint: 'saved/checkpoints/MultiModal_best.pt'  # 예측 시 불러올 모델 경로
+seed: 0
+device: cuda
+model: MultiModalModel  # MultiModalModel 선택
+wandb: False
+wandb_project: 'multimodal-project'
+run_name: ''
+
+model_args:
+    # 새로운 MultiModalModel에 대한 설정 추가
+    MultiModalModel:
+        datatype: multimodal  # 데이터 유형을 multimodal로 설정
+        img_size: 128  # Vision Transformer에서 사용할 이미지 크기
+        patch_size: 32  # Vision Transformer에서 사용할 패치 크기
+        embed_dim: 256  # Vision Transformer와 BERT 임베딩 차원
+        num_classes: 10  # 최종 분류할 클래스 수
+        pretrained_model: 'bert-base-uncased'  # BERT에서 사용할 사전 학습된 모델
+        max_length: 128  # BERT에서 사용할 최대 토큰 길이
+
+dataset:
+    data_path: data/  
+    valid_ratio: 0.2
+
+dataloader:
+    batch_size: 4       # 32, 16에서 Killed 연속발생으로 4까지 축소
+    shuffle: True
+    num_workers: 2
+
+optimizer:
+    type: Adam
+    args:
+        lr: 0.0005
+        weight_decay: 0.0001
+        amsgrad: False
+
+loss: CrossEntropyLoss
+
+lr_scheduler:
+    use: True
+    type: StepLR
+    args:
+        step_size: 10
+        gamma: 0.1
+
+metrics: [CrossEntropyLoss]
+
+train:
+    epochs: 20
+    log_dir: saved/log
+    ckpt_dir: saved/checkpoint
+    submit_dir: saved/submit
+    save_best_model: True
+    resume: False
+    resume_path: saved/checkpoint/MultiModal_best.pt
