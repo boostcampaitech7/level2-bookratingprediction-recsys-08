@@ -82,25 +82,55 @@ model_args:     # model에 해당하는 파라미터만 실질적으로 사용�
         mlp_dims: [16, 32]          # MLP_Base의 히든 레이어 차원
         batchnorm: True        # MLP_Base에서 배치 정규화 사용 여부
         dropout: 0.2            # MLP_Base에서 드롭아웃 비율
+    # Text_FM:
+    #     datatype: text      # basic, context, image, text 중 text 가능
+    #     vector_create: False    # True: BERT를 통해 임베딩 벡터 생성 / False: 기존에 만든 벡터 사용
+    #     embed_dim: 16           # sparse 벡터를 임베딩할 차원
+    #     pretrained_model: 'bert-base-uncased'   # 텍스트 임베딩에 사용할 사전학습 모델
+    #     word_dim: 768                           # 사전학습 모델을 통해 생성된 임베딩 벡터 차원
+    # Text_DeepFM:
+    #     datatype: text      # basic, context, image, text 중 text 가능
+    #     vector_create: False    # True: BERT를 통해 임베딩 벡터 생성 / False: 기존에 만든 벡터 사용
+    #     embed_dim: 16           # sparse 벡터를 임베딩할 차원
+    #     pretrained_model: 'bert-base-uncased'   # 텍스트 임베딩에 사용할 사전학습 모델
+    #     word_dim: 768                           # 사전학습 모델을 통해 생성된 임베딩 벡터 차원
+    #     mlp_dims: [16, 32]      # MLP_Base의 히든 레이어 차원
+    #     batchnorm: True    # MLP_Base에서 배치 정규화 사용 여부
+    #     dropout: 0.2        # MLP_Base에서 드롭아웃 비율
+
+    # Text_FM:
+    #     datatype: text
+    #     vector_create: True
+    #     embed_dim: 16
+    #     pretrained_model: 'bert-base-uncased'
+    #     word_dim: 768
+    #     use_electra_embedding: True  # Text_FM에서 Electra 임베딩 사용 여부
+    #     electra_model_name: "google/electra-small-discriminator"  # Electra 모델 이름
     Text_FM:
-        datatype: text      # basic, context, image, text 중 text 가능
-        vector_create: False    # True: BERT를 통해 임베딩 벡터 생성 / False: 기존에 만든 벡터 사용
-        embed_dim: 16           # sparse 벡터를 임베딩할 차원
-        pretrained_model: 'bert-base-uncased'   # 텍스트 임베딩에 사용할 사전학습 모델
-        word_dim: 768                           # 사전학습 모델을 통해 생성된 임베딩 벡터 차원
+        datatype: text
+        vector_create: true  # 벡터 생성 활성화
+        embed_dim: 16
+        pretrained_model: 'bert-base-uncased'
+        word_dim: 768
+        use_electra_embedding: true
+        electra_model_name: "google/electra-small-discriminator"
+
     Text_DeepFM:
-        datatype: text      # basic, context, image, text 중 text 가능
-        vector_create: False    # True: BERT를 통해 임베딩 벡터 생성 / False: 기존에 만든 벡터 사용
-        embed_dim: 16           # sparse 벡터를 임베딩할 차원
-        pretrained_model: 'bert-base-uncased'   # 텍스트 임베딩에 사용할 사전학습 모델
-        word_dim: 768                           # 사전학습 모델을 통해 생성된 임베딩 벡터 차원
-        mlp_dims: [16, 32]      # MLP_Base의 히든 레이어 차원
-        batchnorm: True    # MLP_Base에서 배치 정규화 사용 여부
-        dropout: 0.2        # MLP_Base에서 드롭아웃 비율
+        datatype: text
+        vector_create: True
+        embed_dim: 16
+        pretrained_model: 'bert-base-uncased'
+        word_dim: 768
+        mlp_dims: [16, 32]
+        batchnorm: True
+        dropout: 0.2
+        use_electra_embedding: False  # Text_DeepFM에서 Electra 임베딩 사용 여부
+        electra_model_name: "google/electra-small-discriminator"  # Electra 모델 이름
+
 
 
 dataset:
-    data_path: data/    # 데이터셋 경로
+    data_path: ../../data/    # 데이터셋 경로
     valid_ratio: 0.2    # Train / Vaildation split
 
 dataloader:

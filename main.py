@@ -12,34 +12,34 @@ import src.models as model_module
 
 
 def main(args, wandb=None):
-    Setting.seed_everything(args.seed)
+    Setting.seed_everything(args.seed) # utils의 Setting으로 시드고정
 
     ######################## LOAD DATA
-    datatype = args.model_args[args.model].datatype
+    datatype = args.model_args[args.model].datatype # config_baseline에서 받아온 모델의 datatype(text/image/context)
     data_load_fn = getattr(
-        data_module, f"{datatype}_data_load"
+        data_module, f"{datatype}_data_load" # 예)data폴더의 text_data.py의 text_data_load라는 함수를 data_load_fn에 저장
     )  # e.g. basic_data_load()
     data_split_fn = getattr(
-        data_module, f"{datatype}_data_split"
+        data_module, f"{datatype}_data_split" # 예)data폴더의 text_data.py의 text_data_split라는 함수를 data_split_fn에 저장
     )  # e.g. basic_data_split()
     data_loader_fn = getattr(
-        data_module, f"{datatype}_data_loader"
+        data_module, f"{datatype}_data_loader" # 예)data폴더의 text_data.py의 text_data_loader라는 함수를 data_loader_fn에 저장
     )  # e.g. basic_data_loader()
 
     print(f"--------------- {args.model} Load Data ---------------")
-    data = data_load_fn(args)
+    data = data_load_fn(args) # 데이터 로드
 
     print(f"--------------- {args.model} Train/Valid Split ---------------")
-    data = data_split_fn(args, data)
-    data = data_loader_fn(args, data)
+    data = data_split_fn(args, data) # 훈련/검증 스플릿
+    data = data_loader_fn(args, data) # 배치처리를 위해 데이터로더에 데이터 저장 
 
     ####################### Setting for Log
-    setting = Setting()
+    setting = Setting() # Setting() 클래스 객체를 생성
 
-    if args.predict == False:
-        log_path = setting.get_log_path(args)
-        logger = Logger(args, log_path)
-        logger.save_args()
+    if args.predict == False: # 예측 모드가 아닌 학습 모드일 때만 로그를 생성
+        log_path = setting.get_log_path(args) # 로그 파일이 저장될 경로를 설정
+        logger = Logger(args, log_path) # Logger 클래스 객체를 생성
+        logger.save_args() # 현재 args에 있는 설정 값들을 로그 파일에 저장
 
     ######################## Model
     print(f"--------------- INIT {args.model} ---------------")
@@ -47,7 +47,7 @@ def main(args, wandb=None):
     # model = FM(args.model_args.FM, data).to('cuda')와 동일한 코드
     model = getattr(model_module, args.model)(args.model_args[args.model], data).to(
         args.device
-    )
+    ) # 선택한 모델을 데이터와 함께 GPU로 이동
 
     # 만일 기존의 모델을 불러와서 학습을 시작하려면 resume을 true로 설정하고 resume_path에 모델을 지정하면 됨
     if args.train.resume:
@@ -56,24 +56,24 @@ def main(args, wandb=None):
     ######################## TRAIN
     if not args.predict:
         print(f"--------------- {args.model} TRAINING ---------------")
-        model = train(args, model, data, logger, setting)
+        model = train(args, model, data, logger, setting) # train 함수를 통해 모델을 학습
 
     ######################## INFERENCE
-    if not args.predict:
+    if not args.predict: # 학습 모드와 예측 모드를 구분하여 실행
         print(f"--------------- {args.model} PREDICT ---------------")
-        predicts = test(args, model, data, setting)
+        predicts = test(args, model, data, setting) # test 함수로 모델을 평가
     else:
         print(f"--------------- {args.model} PREDICT ---------------")
-        predicts = test(args, model, data, setting, args.checkpoint)
+        predicts = test(args, model, data, setting, args.checkpoint) # args.checkpoint에서 지정된 모델 상태를 불러와 예측
 
     ######################## SAVE PREDICT
     print(f"--------------- SAVE {args.model} PREDICT ---------------")
-    submission = pd.read_csv(args.dataset.data_path + "sample_submission.csv")
-    submission["rating"] = predicts
+    submission = pd.read_csv(args.dataset.data_path + "sample_submission.csv") # sample_submission.csv 파일을 불러오기
+    submission["rating"] = predicts # 예측된 predicts 값을 submission["rating"]에 추가
 
-    filename = setting.get_submit_filename(args)
+    filename = setting.get_submit_filename(args) # 저장할 파일 이름을 생성
     print(f"Save Predict: {filename}")
-    submission.to_csv(filename, index=False)
+    submission.to_csv(filename, index=False) # 예측 결과를 CSV 파일로 저장
 
 
 if __name__ == "__main__":
@@ -81,7 +81,7 @@ if __name__ == "__main__":
     ######################## BASIC ENVIRONMENT SETUP
     parser = argparse.ArgumentParser(description="parser")
 
-    arg = parser.add_argument
+    arg = parser.add_argument # argparse의 여러 가지 설정 받아오기
     str2dict = lambda x: {k: int(v) for k, v in (i.split(":") for i in x.split(","))}
 
     # add basic arguments (no default value)
@@ -245,7 +245,7 @@ if __name__ == "__main__":
         )  # src 내의 모든 파일을 업로드. Artifacts에서 확인 가능
 
     ######################## MAIN
-    main(config_yaml)
+    main(config_yaml) # 모든 설정을 main 함수로 넘겨서 프로그램을 실행
 
     if args.wandb:
-        wandb.finish()
+        wandb.finish() # WandB 세션을 마무리

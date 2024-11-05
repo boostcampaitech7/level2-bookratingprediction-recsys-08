@@ -55,7 +55,7 @@ parameters:
     dataset:
         parameters:
             data_path:          # 데이터셋 경로
-                value: data/
+                value: ../../data/
             valid_ratio:        # Train / Vaildation split
                 value: 0.2
 

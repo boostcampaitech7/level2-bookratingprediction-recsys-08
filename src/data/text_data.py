@@ -8,6 +8,25 @@ from torch.utils.data import DataLoader, Dataset
 from transformers import AutoTokenizer, AutoModel
 from .basic_data import basic_data_split
 
+# Electra 모델과 토크나이저 불러오기
+tokenizer = AutoTokenizer.from_pretrained("google/electra-small-discriminator")
+electra_model = AutoModel.from_pretrained("google/electra-small-discriminator")
+
+def electra_embedding(text, tokenizer, model, device='cuda'):
+    # 텍스트를 토큰화하고, 모델 입력으로 변환
+    inputs = tokenizer(text, return_tensors="pt", truncation=True, padding=True)
+    inputs = {key: value.to(device) for key, value in inputs.items()}  # 입력 데이터를 GPU로 전송
+    model = model.to(device)  # 모델을 GPU로 전송
+    
+    # Electra 모델을 통해 임베딩 벡터 추출
+    with torch.no_grad():
+        outputs = model(**inputs)
+    
+    # 'last_hidden_state'의 평균을 사용해 하나의 벡터로 만듦
+    embedding = outputs.last_hidden_state.mean(dim=1)
+    return embedding
+
+
 
 def text_preprocessing(summary):
     """
@@ -92,8 +111,8 @@ def process_text_data(ratings, users, books, tokenizer, model, vector_create=Fal
     )
 
     if vector_create:
-        if not os.path.exists("./data/text_vector"):
-            os.makedirs("./data/text_vector")
+        if not os.path.exists("../../data/text_vector"):
+            os.makedirs("../../data/text_vector")
 
         print("Create Item Summary Vector")
         book_summary_vector_list = []
@@ -106,18 +125,27 @@ def process_text_data(ratings, users, books, tokenizer, model, vector_create=Fal
             # Summary: {summary}
             # '''
             prompt_ = f"Book Title: {title}\n Summary: {summary}\n"
-            vector = text_to_vector(prompt_, tokenizer, model)
+            vector = electra_embedding(prompt_, tokenizer, model).squeeze()
             book_summary_vector_list.append(vector)
+
+        # book_summary_vector_list = np.concatenate(
+        #     [
+        #         books_["isbn"].values.reshape(-1, 1),
+        #         np.asarray(book_summary_vector_list, dtype=np.float32),
+        #     ],
+        #     axis=1,
+        # )
 
         book_summary_vector_list = np.concatenate(
             [
                 books_["isbn"].values.reshape(-1, 1),
-                np.asarray(book_summary_vector_list, dtype=np.float32),
+                np.asarray([vec.cpu().numpy() for vec in book_summary_vector_list], dtype=np.float32),
             ],
             axis=1,
         )
 
-        np.save("./data/text_vector/book_summary_vector.npy", book_summary_vector_list)
+
+        np.save("../../data/text_vector/book_summary_vector.npy", book_summary_vector_list)
 
         print("Create User Summary Merge Vector")
         user_summary_merge_vector_list = []
@@ -150,19 +178,39 @@ def process_text_data(ratings, users, books, tokenizer, model, vector_create=Fal
             ):
                 summary = summary if len(summary) < 100 else f"{summary[:100]} ..."
                 prompt_ += f"{idx+1}. Book Title: {title}\n Summary: {summary}\n"
-            vector = text_to_vector(prompt_, tokenizer, model)
+            vector = electra_embedding(prompt_, tokenizer, model).squeeze()
             user_summary_merge_vector_list.append(vector)
+
+        # user_summary_merge_vector_list = np.concatenate(
+        #     [
+        #         users_["user_id"].values.reshape(-1, 1),
+        #         np.asarray(user_summary_merge_vector_list, dtype=np.float32),
+        #     ],
+        #     axis=1,
+        # 
+
+        # user_summary_merge_vector_list = np.concatenate(
+        #     [
+        #         users_["user_id"].values.reshape(-1, 1),
+        #         np.asarray([vec.cpu().numpy() for vec in user_summary_merge_vector_list], dtype=np.float32),
+        #     ],
+        #     axis=1,
+        # )
 
         user_summary_merge_vector_list = np.concatenate(
             [
                 users_["user_id"].values.reshape(-1, 1),
-                np.asarray(user_summary_merge_vector_list, dtype=np.float32),
+                np.asarray([vec.cpu().numpy() if isinstance(vec, torch.Tensor) else vec for vec in user_summary_merge_vector_list], dtype=np.float32),
             ],
             axis=1,
         )
 
+
+
+
+
         np.save(
-            "./data/text_vector/user_summary_merge_vector.npy",
+            "../../data/text_vector/user_summary_merge_vector.npy",
             user_summary_merge_vector_list,
         )
 
@@ -170,10 +218,10 @@ def process_text_data(ratings, users, books, tokenizer, model, vector_create=Fal
         print("Check Vectorizer")
         print("Vector Load")
         book_summary_vector_list = np.load(
-            "./data/text_vector/book_summary_vector.npy", allow_pickle=True
+            "../../data/text_vector/book_summary_vector.npy", allow_pickle=True
         )
         user_summary_merge_vector_list = np.load(
-            "./data/text_vector/user_summary_merge_vector.npy", allow_pickle=True
+            "../../data/text_vector/user_summary_merge_vector.npy", allow_pickle=True
         )
 
     book_summary_vector_df = pd.DataFrame({"isbn": book_summary_vector_list[:, 0]})
@@ -272,11 +320,11 @@ def text_data_load(args):
 
     tokenizer = AutoTokenizer.from_pretrained(
         args.model_args[args.model].pretrained_model
-    )
+    ) # config_baseline의 model_args에서 설정한 모델의 pretrained_model값 사용(ex. 'bert-base-uncased') 걔의 tokenizer사용
     model = AutoModel.from_pretrained(args.model_args[args.model].pretrained_model).to(
-        device=args.device
-    )
-    model.eval()
+        device=args.device # 
+    )# 예) 'bert-base-uncased'의 사전 학습된 모델을 AutoModel 클래스를 사용해 불러옴
+    model.eval() # 평가모드로 전환
     users_, books_ = process_text_data(
         train, users, books, tokenizer, model, args.model_args[args.model].vector_create
     )
