@@ -32,11 +32,14 @@ def basic_data_load(args):
     label2idx, idx2label = {}, {}
     for col in sparse_cols:
         all_df[col] = all_df[col].fillna("unknown")
+        train_df[col] = train_df[col].fillna("unknown")
+        test_df[col] = test_df[col].fillna("unknown")
         unique_labels = all_df[col].astype("category").cat.categories
         label2idx[col] = {label: idx for idx, label in enumerate(unique_labels)}
         idx2label[col] = {idx: label for idx, label in enumerate(unique_labels)}
-        train_df[col] = train_df[col].astype("category").cat.codes
-        test_df[col] = test_df[col].astype("category").cat.codes
+        train_df[col] = pd.Categorical(train_df[col], categories=unique_labels).codes
+        test_df[col] = pd.Categorical(test_df[col], categories=unique_labels).codes
+
 
     field_dims = [len(label2idx[col]) for col in sparse_cols]
 
