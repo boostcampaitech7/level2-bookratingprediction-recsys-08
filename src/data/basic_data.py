@@ -40,6 +40,7 @@ def basic_data_load(args):
         train_df[col] = pd.Categorical(train_df[col], categories=unique_labels).codes
         test_df[col] = pd.Categorical(test_df[col], categories=unique_labels).codes
 
+
     field_dims = [len(label2idx[col]) for col in sparse_cols]
 
     data = {
